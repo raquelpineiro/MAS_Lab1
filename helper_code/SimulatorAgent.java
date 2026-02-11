@@ -22,7 +22,7 @@ public class SimulatorAgent extends Agent {
     // Simulation parameters
     int numParticipants = 2;
     int numSimRounds = 1000;
-    int numStepsMapReDist = 10; // If equals numSimRounds, implies no map rescheduling
+    int numStepsMapReDist = 1000; // If equals numSimRounds, implies no map rescheduling
     
     // Simulation state
     public boolean simulationStarted = false;
@@ -78,9 +78,11 @@ public class SimulatorAgent extends Agent {
                         send(reqp);
                     }
 
-                    showOverallState();
+                    showOverallState(true);
 
                     doDelete();
+
+                    System.exit(0);
                 }
                 
                 // Either simulation running or not started
@@ -163,7 +165,7 @@ public class SimulatorAgent extends Agent {
         return initialState;
     }
 
-    public void showOverallState()
+    public void showOverallState(boolean isFinal)
     {
         // Retrieve participant's positions
         LinkedList<Position> posToHighlight = new LinkedList<>();
@@ -171,9 +173,13 @@ public class SimulatorAgent extends Agent {
         {
             posToHighlight.add(participant.getSimulationState().getPosition());
         }
+
+        if(isFinal)
+            System.out.println("\nFINAL SIMULATION STATE:");
+         else
+            System.out.println("\nSIMULATION STATE:");
         
         // SimulatorAgent's simulation state
-        System.out.println("\nSimulator's agent status:");
         System.out.print(_map.toString(posToHighlight));
         //_map.show(); // map with no highlighted participant's position
         
@@ -183,6 +189,9 @@ public class SimulatorAgent extends Agent {
         {
             System.out.print(participant.toString());
         } 
+
+        if(isFinal)
+            System.out.println("\nFINAL SIMULATION END");
         
         // debug: wait pressing enter to continue
         /*try {

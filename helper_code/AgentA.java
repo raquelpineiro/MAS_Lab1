@@ -10,33 +10,25 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import java.util.LinkedList;
 import java.util.Random;
 
-public class RandomAgent extends Agent {
+public class AgentA extends Agent {
     
     private SimulationState myState;
     private MapNavigator navigator;
     private AID simulatorAID;
     private int commitment;
 
-    // --- METHOD SETUP ---
     protected void setup() {
-        System.out.println("Agente " + getLocalName() + " iniciando...");
-
-        // 1. Read arguments
+        System.out.println("Agent A " + getLocalName() + " initialize...");
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             commitment = Integer.parseInt((String) args[0]);
         } else {
             commitment = 1; 
         }
-
-        // 2. Initialize tools
         navigator = new MapNavigator();
-
-        // 3. Call the function to join the simulation
         joinSimulation();
     } 
 
-    // --- METHOD JOIN SIMULATION WITH RETRAIS ---
     private void joinSimulation() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
@@ -93,7 +85,7 @@ public class RandomAgent extends Agent {
         }
     }
 
-    // --- BEHAVIOUR TO PLAY THE GAME ---
+    // --- INTELLIGENT BEHAVIOUR (GREEDY) ---
     private class PlayGameBehaviour extends CyclicBehaviour {
         public void action() {
             ACLMessage msg = myAgent.receive();
@@ -101,42 +93,74 @@ public class RandomAgent extends Agent {
             if (msg != null) {
                 String conversationId = msg.getConversationId();
 
-                // CASO 1: Movement request
                 if ("request-action".equals(conversationId) && msg.getPerformative() == ACLMessage.REQUEST) {
                     try {
                         Position currentPos = myState.getPosition();
                         LinkedList<Position> candidates = navigator.getNextPossiblePositions(myState.getMap(), currentPos);
                         
-                        Random rand = new Random();
-                        Position nextMove = currentPos; 
+                        // --- STRATEGY AGENT A ---
+                        Position nextMove = null;
                         
-                        if (!candidates.isEmpty()) {
-                            int index = rand.nextInt(candidates.size());
-                            nextMove = candidates.get(index);
+                        // 1. Obtain list of items in the map
+                        LinkedList<Position> items = myState.getMap().getItemPositions();
+                        
+                        // 2. Filter candidates to avoid traps (if possible)
+                        LinkedList<Position> safeCandidates = new LinkedList<>();
+                        for (Position p : candidates) {
+                            if (!myState.getMap().isTrapPosition(p)) {
+                                safeCandidates.add(p);
+                            }
+                        }
+                        
+                        // If we have safe candidates, we will consider them. If not, we will consider all candidates (even if they have traps) to avoid being stuck.
+                        LinkedList<Position> finalCandidates = safeCandidates.isEmpty() ? candidates : safeCandidates;
+
+                        if (!items.isEmpty()) {
+                            // 3. If there are items, choose the one closest to me
+                            Position bestItem = null;
+                            int minDistance = Integer.MAX_VALUE;
+                            
+                            for (Position item : items) {
+                                int dist = Math.abs(item.x - currentPos.x) + Math.abs(item.y - currentPos.y);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    bestItem = item;
+                                }
+                            }
+                            
+                            // 4. Choose the candidate move that brings me closer to that item
+                            int currentDist = Math.abs(bestItem.x - currentPos.x) + Math.abs(bestItem.y - currentPos.y);
+                            
+                            for (Position move : finalCandidates) {
+                                int newDist = Math.abs(bestItem.x - move.x) + Math.abs(bestItem.y - move.y);
+                                if (newDist < currentDist) {
+                                    nextMove = move;
+                                    currentDist = newDist; // Update currentDist to ensure we pick the best move towards the item
+                                }
+                            }
+                        }
+                        
+                        // 5. If no move brings me closer to an item, pick a random safe move (or any move if no safe moves)
+                        if (nextMove == null && !finalCandidates.isEmpty()) {
+                            Random rand = new Random();
+                            nextMove = finalCandidates.get(rand.nextInt(finalCandidates.size()));
+                        } else if (nextMove == null) {
+                            nextMove = currentPos; // Stay in place if no moves available (should not happen since we should have at least the current position as candidate)
                         }
 
+                        // Send the chosen move as a proposal
                         ACLMessage proposal = msg.createReply();
                         proposal.setPerformative(ACLMessage.PROPOSE);
                         proposal.setContentObject(nextMove);
                         myAgent.send(proposal);
-                        
-                        System.out.println(getLocalName() + ": Move to " + nextMove);
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    } catch (Exception e) { e.printStackTrace(); }
                 } 
-                // CASO 2: State update
-                else if ("update-state".equals(conversationId) && msg.getPerformative() == ACLMessage.INFORM) {
-                    try {
-                        myState = (SimulationState) msg.getContentObject();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                else if ("update-state".equals(conversationId)) {
+                    try { myState = (SimulationState) msg.getContentObject(); } catch (Exception e) {}
                 }
-                // CASO 3: Simulation complete
                 else if ("simulation-complete".equals(conversationId)) {
-                    System.out.println(getLocalName() + ": End of the game.");
+                    System.out.println(getLocalName() + ": End. I have finish.");
                     myAgent.doDelete();
                 }
             } else {
