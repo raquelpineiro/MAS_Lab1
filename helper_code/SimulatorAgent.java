@@ -32,6 +32,20 @@ public class SimulatorAgent extends Agent {
     protected void setup() {
         System.out.println("Starting setup of simulator agent...");
 
+        // Read optional arguments: mapSize numItems numTraps numParticipants numSimRounds numStepsMapReDist
+        Object[] args = getArguments();
+        if (args != null && args.length >= 6) {
+            mapSize = Integer.parseInt((String) args[0]);
+            numItems = Integer.parseInt((String) args[1]);
+            numTraps = Integer.parseInt((String) args[2]);
+            numParticipants = Integer.parseInt((String) args[3]);
+            numSimRounds = Integer.parseInt((String) args[4]);
+            numStepsMapReDist = Integer.parseInt((String) args[5]);
+        }
+
+        System.out.printf("Config: map=%dx%d, items=%d, traps=%d, participants=%d, rounds=%d, reDist=%d%n",
+            mapSize, mapSize, numItems, numTraps, numParticipants, numSimRounds, numStepsMapReDist);
+
         // Initialize map according to parameters
         try{
             _map = new Map(mapSize, mapSize, numItems, numTraps);
@@ -163,6 +177,11 @@ public class SimulatorAgent extends Agent {
         participants.add(new Participant(agentAID, initialState, agentCommitment));
         
         return initialState;
+    }
+
+    public void showOverallState()
+    {
+        showOverallState(false);
     }
 
     public void showOverallState(boolean isFinal)
