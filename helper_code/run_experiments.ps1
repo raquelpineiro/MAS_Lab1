@@ -5,7 +5,7 @@
 # Usage: powershell -ExecutionPolicy Bypass -File run_experiments.ps1
 # ============================================================
 
-$JADE_LIB = "C:\Users\david\Documents\JADE-all-4.6.0\JADE-bin-4.6.0\jade\lib\jade.jar"
+$JADE_LIB = "..\..\jade.jar"
 $TEMP_FILE = "temp_raw.txt"
 $RESULTS_DIR = "results"
 $NUM_REPS = 10

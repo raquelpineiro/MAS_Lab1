@@ -6,7 +6,7 @@ setlocal EnableDelayedExpansion
 :: Runs all 4 scenarios x agent configs x 2 commitments x 10 reps
 :: ============================================================
 
-set JADE_LIB="C:\Users\david\Documents\JADE-all-4.6.0\JADE-bin-4.6.0\jade\lib\jade.jar"
+set JADE_LIB="..\..\jade.jar"
 set TEMP_FILE=temp_raw.txt
 set RESULTS_DIR=results
 set NUM_REPS=10

@@ -6,7 +6,7 @@ setlocal EnableDelayedExpansion
 :: Saves raw output per run to results\logs\ directory
 :: ============================================================
 
-set JADE_LIB=C:\Users\david\Documents\JADE-all-4.6.0\JADE-bin-4.6.0\jade\lib\jade.jar
+set JADE_LIB=..\..\jade.jar
 set NUM_REPS=10
 set MAP_SIZE=10
 set NUM_ITEMS=5
